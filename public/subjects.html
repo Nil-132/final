@@ -102,6 +102,7 @@
           window.location.href = '/login.html';
         }
       } catch (err) {
+        console.error('Auth error:', err);
         window.location.href = '/login.html';
       }
     }
@@ -111,8 +112,11 @@
       container.innerHTML = '<p class="col-span-3 text-center py-12 text-gray-500">Loading subjects...</p>';
 
       try {
+        console.log('Fetching subjects from:', `${BACKEND_URL}/api/subjects`);
         const res = await fetch(`${BACKEND_URL}/api/subjects`, { credentials: 'include' });
+        console.log('Subjects response status:', res.status);
         let subjects = await res.json();
+        console.log('Subjects received:', subjects);
 
         if (!subjects || subjects.length === 0) {
           subjects = [
@@ -144,7 +148,9 @@
               const completed = lectures.filter(l => l.completed === true).length;
               progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             }
-          } catch (e) {}
+          } catch (e) {
+            console.error('Lecture fetch error for', sub.name, e);
+          }
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
@@ -179,7 +185,9 @@
               const completed = lectures.filter(l => l.completed === true).length;
               progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             }
-          } catch (e) {}
+          } catch (e) {
+            console.error('Lecture fetch error for new subject', sub.name, e);
+          }
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
@@ -201,10 +209,10 @@
             </div>`;
         }
 
-        container.innerHTML = html;
+        container.innerHTML = html || '<p class="col-span-3 text-center py-12 text-gray-500">No subjects available.</p>';
       } catch (err) {
-        console.error('Subjects load error:', err);
-        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Could not load subjects from server. Check console (F12).</p>`;
+        console.error('Subjects render error:', err);
+        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Could not load subjects. Check console (F12) for details.</p>`;
       }
     }
 
@@ -244,7 +252,7 @@
           alert(data.msg || "Failed to add subject");
         }
       } catch (err) {
-        alert("Server error while adding subject. Make sure server is running.");
+        alert("Server error while adding subject.");
       }
     }
 
@@ -257,7 +265,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert(`🗑️ Subject deleted successfully!`);
+          alert(`🗑️ Subject deleted!`);
           renderSubjects();
         } else {
           alert("Failed to delete subject");
