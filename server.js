@@ -35,7 +35,7 @@ app.use(helmet({
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://final-djbd.onrender.com',   // ← your current domain
+    'https://final-djbd.onrender.com',
     'https://final-1-2h61.onrender.com',
     process.env.FRONTEND_URL
   ],
@@ -156,7 +156,7 @@ mongoose.connection.once('open', async () => {
   await seedSubjects();
 });
 
-// ====================== ROUTES (All your features kept) ======================
+// ====================== ROUTES ======================
 
 // Live Today
 app.get('/api/live/today', authenticate, async (req, res) => {
@@ -231,7 +231,7 @@ app.post('/api/signup', async (req, res) => {
   }
 });
 
-// Login with secure cookie
+// Login - FIXED (No duplicate response)
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -239,23 +239,29 @@ app.post('/api/login', async (req, res) => {
     if (!user || !(await user.comparePassword(password))) {
       return res.json({ success: false, msg: "Invalid email or password" });
     }
-    // Inside app.post('/api/login' ...
-// Inside app.post('/api/login', ...
-const token = jwt.sign({ id: user._id, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
 
-// ←←← REPLACE THE res.cookie line with this:
-res.cookie('token', token, {
-  httpOnly: true,
-  secure: true,           // Important for HTTPS on Render
-  sameSite: 'none',       // Required for cross-origin on Render
-  maxAge: 7 * 24 * 60 * 60 * 1000
-});
+    const token = jwt.sign(
+      { id: user._id, role: user.role, name: user.name }, 
+      JWT_SECRET, 
+      { expiresIn: '7d' }
+    );
 
-res.json({ success: true, msg: "Login successful", user: { name: user.name, role: user.role } });
-    
-    res.json({ success: true, msg: "Login successful", user: { name: user.name, role: user.role } });
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    return res.json({ 
+      success: true, 
+      msg: "Login successful", 
+      user: { name: user.name, role: user.role } 
+    });
+
   } catch (err) {
-    res.status(500).json({ success: false, msg: "Server error" });
+    console.error("Login error:", err);
+    return res.status(500).json({ success: false, msg: "Server error" });
   }
 });
 
@@ -399,8 +405,9 @@ app.delete('/api/live/:id', authenticate, isAdmin, async (req, res) => {
 app.get('/api/subjects', authenticate, async (req, res) => {
   try {
     const subjects = await Subject.find().sort({ order: 1 });
-    res.json(subjects);
+    res.json({ success: true, subjects });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, msg: "Failed to load subjects" });
   }
 });
@@ -423,28 +430,52 @@ app.delete('/api/subjects/:id', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// Admin CRUD routes
+// Improved Admin CRUD routes
 app.post('/api/chapters', authenticate, isAdmin, async (req, res) => {
-  try { res.json(await Chapter.create(req.body)); } catch (e) { res.status(500).json({success:false}); }
+  try {
+    const chapter = await Chapter.create(req.body);
+    res.json({ success: true, chapter });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, msg: "Failed to create chapter" });
+  }
 });
 
 app.post('/api/lectures', authenticate, isAdmin, async (req, res) => {
-  try { res.json(await Lecture.create(req.body)); } catch (e) { res.status(500).json({success:false}); }
+  try {
+    const lecture = await Lecture.create(req.body);
+    res.json({ success: true, lecture });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ success: false, msg: "Failed to create lecture" });
+  }
 });
 
 app.delete('/api/chapters/:id', authenticate, isAdmin, async (req, res) => {
-  await Chapter.findByIdAndDelete(req.params.id);
-  res.json({success:true});
+  try {
+    await Chapter.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "Failed to delete chapter" });
+  }
 });
 
 app.delete('/api/lectures/:id', authenticate, isAdmin, async (req, res) => {
-  await Lecture.findByIdAndDelete(req.params.id);
-  res.json({success:true});
+  try {
+    await Lecture.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "Failed to delete lecture" });
+  }
 });
 
 app.put('/api/lectures/:id', authenticate, isAdmin, async (req, res) => {
-  const lecture = await Lecture.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(lecture || {success:false});
+  try {
+    const lecture = await Lecture.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(lecture ? { success: true, lecture } : { success: false, msg: "Lecture not found" });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "Failed to update lecture" });
+  }
 });
 
 app.listen(PORT, () => {
