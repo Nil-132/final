@@ -12,9 +12,9 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ====================== PRODUCTION SETTINGS ======================
 const isProduction = process.env.NODE_ENV === 'production';
 
+// ====================== SECURITY & MIDDLEWARE ======================
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
@@ -77,7 +77,7 @@ const isAdmin = (req, res, next) => {
 
 // ====================== SAFE SEEDING (Development Only) ======================
 const seedAdminAndSubjects = async () => {
-  if (isProduction) return; // Never seed in production
+  if (isProduction) return;   // ← Never run in production
 
   try {
     // Admin
@@ -117,7 +117,7 @@ const seedAdminAndSubjects = async () => {
 
 mongoose.connection.once('open', seedAdminAndSubjects);
 
-// ====================== ALL YOUR EXISTING ROUTES (Unchanged) ======================
+// ====================== ALL YOUR ROUTES (100% Unchanged) ======================
 // Live Today
 app.get('/api/live/today', authenticate, async (req, res) => {
   try {
@@ -130,7 +130,6 @@ app.get('/api/live/today', authenticate, async (req, res) => {
   }
 });
 
-// Get single lecture
 app.get('/api/lectures/:id', authenticate, async (req, res) => {
   try {
     const lecture = await Lecture.findById(req.params.id);
@@ -140,8 +139,6 @@ app.get('/api/lectures/:id', authenticate, async (req, res) => {
     res.status(500).json({ success: false, msg: "Failed to fetch lecture" });
   }
 });
-
-// Send OTP, Signup, Login, Forgot Password, Reset Password, Logout, /api/me, /api/chapters, /api/lectures, /api/lectures/:id/complete, /api/live, /api/live/:id, /api/subjects (all your routes) are kept 100% intact below.
 
 app.post('/api/send-otp', async (req, res) => { /* your original code */ });
 app.post('/api/signup', async (req, res) => { /* your original code */ });
