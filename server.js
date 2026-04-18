@@ -20,9 +20,10 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://cdn.tailwindcss.com"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "https://cdn.tailwindcss.com", "'unsafe-inline'"],   // Allow Tailwind + inline scripts
+      styleSrc: ["'self'", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],   // Allow Font Awesome + inline styles
       imgSrc: ["'self'", "data:"],
+      connectSrc: ["'self'", "https://final-djbd.onrender.com"],                 // Allow API calls
     },
   },
   crossOriginResourcePolicy: { policy: "cross-origin" },
