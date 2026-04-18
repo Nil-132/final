@@ -13,6 +13,7 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+app.set('trust proxy', 1);   // Important for Render
 
 // ====================== HIGH SECURITY SETUP ======================
 app.use(helmet({
