@@ -85,11 +85,12 @@
   </div>
 
   <script>
+    const BACKEND_URL = 'https://final-djbd.onrender.com';
     let isAdmin = false;
 
     async function checkAdmin() {
       try {
-        const res = await fetch('/api/me', { credentials: 'include' });
+        const res = await fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' });
         const data = await res.json();
         if (data.success) {
           document.getElementById('user-name').textContent = data.user.name || 'Student';
@@ -105,12 +106,12 @@
       }
     }
 
-        async function renderSubjects() {
+    async function renderSubjects() {
       const container = document.getElementById('subjects-container');
       container.innerHTML = '<p class="col-span-3 text-center py-12 text-gray-500">Loading subjects...</p>';
 
       try {
-        const res = await fetch('/api/subjects', { credentials: 'include' });
+        const res = await fetch(`${BACKEND_URL}/api/subjects`, { credentials: 'include' });
         let subjects = await res.json();
 
         // If backend returns empty, use your original 5 as base
@@ -138,7 +139,7 @@
         for (let sub of originalSubjects) {
           let total = 0, progress = 0;
           try {
-            const lecRes = await fetch(`/api/lectures?subjectId=${sub.id}`, { credentials: 'include' });
+            const lecRes = await fetch(`\( {BACKEND_URL}/api/lectures?subjectId= \){sub.id}`, { credentials: 'include' });
             if (lecRes.ok) {
               const lectures = await lecRes.json();
               total = lectures.length;
@@ -149,13 +150,13 @@
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
-              ${isAdmin ? `<button onclick="deleteSubject('${sub.id}')" class="absolute top-4 right-4 text-red-500 hover:text-red-700 text-xl"><i class="fas fa-trash"></i></button>` : ''}
-              <div onclick="openSubject('${sub.id}', '${sub.name}')" class="cursor-pointer">
+              \( {isAdmin ? `<button onclick="deleteSubject(' \){sub.id}')" class="absolute top-4 right-4 text-red-500 hover:text-red-700 text-xl"><i class="fas fa-trash"></i></button>` : ''}
+              <div onclick="openSubject('\( {sub.id}', ' \){sub.name}')" class="cursor-pointer">
                 <div class="flex justify-between items-start mb-8">
                   <div class="text-6xl">${sub.icon}</div>
                   <div class="text-right">
                     <div class="text-sm text-gray-500">${total} Lectures</div>
-                    <div class="text-5xl font-bold text-${sub.color}-600 mt-1">${progress}%</div>
+                    <div class="text-5xl font-bold text-\( {sub.color}-600 mt-1"> \){progress}%</div>
                   </div>
                 </div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-2">${sub.name}</h3>
@@ -175,7 +176,7 @@
 
           let total = 0, progress = 0;
           try {
-            const lecRes = await fetch(`/api/lectures?subjectId=${subjectId}`, { credentials: 'include' });
+            const lecRes = await fetch(`\( {BACKEND_URL}/api/lectures?subjectId= \){subjectId}`, { credentials: 'include' });
             if (lecRes.ok) {
               const lectures = await lecRes.json();
               total = lectures.length;
@@ -186,13 +187,13 @@
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
-              ${isAdmin ? `<button onclick="deleteSubject('${subjectId}')" class="absolute top-4 right-4 text-red-500 hover:text-red-700 text-xl"><i class="fas fa-trash"></i></button>` : ''}
-              <div onclick="openSubject('${subjectId}', '${sub.name}')" class="cursor-pointer">
+              \( {isAdmin ? `<button onclick="deleteSubject(' \){subjectId}')" class="absolute top-4 right-4 text-red-500 hover:text-red-700 text-xl"><i class="fas fa-trash"></i></button>` : ''}
+              <div onclick="openSubject('\( {subjectId}', ' \){sub.name}')" class="cursor-pointer">
                 <div class="flex justify-between items-start mb-8">
                   <div class="text-6xl">${sub.icon || '📚'}</div>
                   <div class="text-right">
                     <div class="text-sm text-gray-500">${total} Lectures</div>
-                    <div class="text-5xl font-bold text-${sub.color || 'blue'}-600 mt-1">${progress}%</div>
+                    <div class="text-5xl font-bold text-\( {sub.color || 'blue'}-600 mt-1"> \){progress}%</div>
                   </div>
                 </div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-2">${sub.name}</h3>
@@ -212,7 +213,7 @@
     }
 
     function openSubject(subjectId, subjectName) {
-      window.location.href = `/lectures.html?subjectId=${subjectId}&subjectName=${encodeURIComponent(subjectName)}`;
+      window.location.href = `/lectures.html?subjectId=\( {subjectId}&subjectName= \){encodeURIComponent(subjectName)}`;
     }
 
     function showAddSubjectModal() {
@@ -223,7 +224,6 @@
       document.getElementById('add-subject-modal').classList.add('hidden');
     }
 
-    // ==================== NEW: Real Backend Integration ====================
     async function addNewSubject() {
       const name = document.getElementById('new-subject-name').value.trim();
       const icon = document.getElementById('new-subject-icon').value.trim() || "📚";
@@ -235,7 +235,7 @@
       }
 
       try {
-        const res = await fetch('/api/subjects', {
+        const res = await fetch(`${BACKEND_URL}/api/subjects`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -250,7 +250,7 @@
         if (data.success) {
           alert(`✅ Subject "${name}" added successfully!`);
           hideAddSubjectModal();
-          renderSubjects();        // Refresh the page to show new subject
+          renderSubjects();
         } else {
           alert(data.msg || "Failed to add subject");
         }
@@ -263,7 +263,7 @@
       if (!confirm(`Delete subject "${subjectId}" and all its lectures?`)) return;
 
       try {
-        const res = await fetch(`/api/subjects/${subjectId}`, {
+        const res = await fetch(`\( {BACKEND_URL}/api/subjects/ \){subjectId}`, {
           method: 'DELETE',
           credentials: 'include'
         });
@@ -279,12 +279,11 @@
         alert("Server error while deleting subject");
       }
     }
-    // =====================================================================
 
     async function logout() {
       if (!confirm("Are you sure you want to logout?")) return;
       try {
-        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+        await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
         window.location.href = '/login.html';
       } catch (err) {
         alert("Logout failed.");
