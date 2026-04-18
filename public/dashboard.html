@@ -108,11 +108,17 @@
   </div>
 
   <script>
+    const BACKEND_URL = 'https://final-djbd.onrender.com';
+
     async function loadDashboard() {
       try {
         // Get user info
-        const userRes = await fetch('/api/me', { credentials: 'include' });
-        if (!userRes.ok) throw new Error();
+        const userRes = await fetch(`${BACKEND_URL}/api/me`, { 
+          credentials: 'include' 
+        });
+        
+        if (!userRes.ok) throw new Error('Auth failed');
+        
         const userData = await userRes.json();
         if (!userData.success) {
           window.location.href = 'login.html';
@@ -123,24 +129,29 @@
         document.getElementById('userRole').textContent = userData.user.role === 'admin' ? 'Admin' : 'Student';
         document.getElementById('welcomeName').textContent = (userData.user.name || 'Student').split(' ')[0];
 
-        // Real Stats
-        const lecturesRes = await fetch('/api/lectures', { credentials: 'include' });
+        // Real Stats - Total & Completed Lectures
+        const lecturesRes = await fetch(`${BACKEND_URL}/api/lectures`, { 
+          credentials: 'include' 
+        });
         const lectures = await lecturesRes.json();
-        const total = lectures.length;
-        const completed = lectures.filter(l => l.completed === true).length;
+        const total = Array.isArray(lectures) ? lectures.length : 0;
+        const completed = Array.isArray(lectures) ? lectures.filter(l => l.completed === true).length : 0;
 
         document.getElementById('totalLectures').textContent = total;
         document.getElementById('completedLectures').textContent = completed;
 
         // Live Today Count
         const today = new Date().toISOString().split('T')[0];
-        const liveRes = await fetch(`/api/live/today?date=${today}`, { credentials: 'include' });
+        const liveRes = await fetch(`\( {BACKEND_URL}/api/live/today?date= \){today}`, { 
+          credentials: 'include' 
+        });
         const liveData = await liveRes.json();
         const liveToday = Array.isArray(liveData) ? liveData.length : 0;
         document.getElementById('liveClasses').textContent = liveToday;
 
       } catch (err) {
-        console.error(err);
+        console.error('Dashboard load error:', err);
+        // Fallback to 0 (keeps UI clean)
         document.getElementById('totalLectures').textContent = '0';
         document.getElementById('completedLectures').textContent = '0';
         document.getElementById('liveClasses').textContent = '0';
@@ -150,7 +161,10 @@
     async function logout() {
       if (!confirm("Are you sure you want to logout?")) return;
       try {
-        await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+        await fetch(`${BACKEND_URL}/api/logout`, { 
+          method: 'POST', 
+          credentials: 'include' 
+        });
       } catch (e) {}
       window.location.href = 'login.html';
     }
