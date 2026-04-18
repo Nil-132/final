@@ -138,12 +138,13 @@
   <div id="toast" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-2xl shadow-2xl text-white"></div>
 
   <script>
+    const BACKEND_URL = 'https://final-djbd.onrender.com';
     let isAdmin = false;
     let currentCategory = 'all';
 
     async function checkAdmin() {
       try {
-        const res = await fetch('/api/me', { credentials: 'include' });
+        const res = await fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' });
         const data = await res.json();
         if (data.success && data.user.role === 'admin') {
           isAdmin = true;
@@ -157,7 +158,7 @@
       const today = new Date().toISOString().split('T')[0];
 
       try {
-        const res = await fetch(`/api/live/today?date=${today}`, { credentials: 'include' });
+        const res = await fetch(`\( {BACKEND_URL}/api/live/today?date= \){today}`, { credentials: 'include' });
         let lives = await res.json();
 
         if (category !== 'all') lives = lives.filter(l => l.category === category);
@@ -169,15 +170,13 @@
           lives.forEach(live => {
             const hours = Math.floor((live.duration || 45) / 60);
             const minutes = (live.duration || 45) % 60;
-            const durationStr = hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
+            const durationStr = hours > 0 ? `${hours} hr \( {minutes} min` : ` \){minutes} min`;
 
             const startTime = new Date(`${live.date} ${live.time}`);
             const endTime = new Date(startTime.getTime() + (live.duration || 45) * 60000);
             const now = new Date();
 
-            let buttonHTML = '';
             let status = '';
-
             if (now < startTime) status = 'Upcoming';
             else if (now >= startTime && now <= endTime) status = 'LIVE';
             else status = 'Completed';
@@ -197,7 +196,7 @@
                     <h4 class="font-semibold text-lg mt-4">${live.title}</h4>
                     <p class="text-sm text-gray-500">${live.time} • ${durationStr}</p>
                   </div>
-                  ${isAdmin ? `<button onclick="deleteLive('${live._id}')" class="text-red-500 hover:text-red-700 text-xl"><i class="fas fa-trash"></i></button>` : ''}
+                  \( {isAdmin ? `<button onclick="deleteLive(' \){live._id}')" class="text-red-500 hover:text-red-700 text-xl"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
                 <div class="mt-8">${btnHTML}</div>
               </div>`;
@@ -216,7 +215,7 @@
       const categories = ['all', 'banking', 'quant', 'english', 'reasoning', 'current'];
       let html = `<button onclick="filterCategory('all')" class="tab px-6 py-2 rounded-3xl text-sm font-medium ${currentCategory === 'all' ? 'tab-active bg-blue-600 text-white' : 'bg-white border'}">All</button>`;
       categories.slice(1).forEach(cat => {
-        html += `<button onclick="filterCategory('${cat}')" class="tab px-6 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-3xl text-sm font-medium border ${currentCategory === cat ? 'tab-active bg-blue-600 text-white' : ''}">${cat.charAt(0).toUpperCase() + cat.slice(1)}</button>`;
+        html += `<button onclick="filterCategory('${cat}')" class="tab px-6 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-3xl text-sm font-medium border \( {currentCategory === cat ? 'tab-active bg-blue-600 text-white' : ''}"> \){cat.charAt(0).toUpperCase() + cat.slice(1)}</button>`;
       });
       document.getElementById('category-tabs').innerHTML = html;
     }
@@ -256,7 +255,6 @@
 
       const totalDuration = (hours * 60) + minutes;
 
-      // Clear previous error
       document.getElementById('modal-error').classList.add('hidden');
 
       if (!title) {
@@ -279,7 +277,7 @@
       }
 
       try {
-        await fetch('/api/live', {
+        await fetch(`${BACKEND_URL}/api/live`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title, category, date, time, duration: totalDuration, youtubeId }),
@@ -296,7 +294,7 @@
     async function deleteLive(id) {
       if (!confirm("Delete this live schedule?")) return;
       try {
-        await fetch(`/api/live/${id}`, { method: 'DELETE', credentials: 'include' });
+        await fetch(`\( {BACKEND_URL}/api/live/ \){id}`, { method: 'DELETE', credentials: 'include' });
         loadLiveClasses(currentCategory);
         showToast("✅ Schedule deleted successfully!", true);
       } catch (err) {
@@ -318,7 +316,7 @@
 
     async function logout() {
       if (!confirm("Are you sure you want to logout?")) return;
-      await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+      await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
       window.location.href = 'login.html';
     }
 
