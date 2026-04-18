@@ -13,6 +13,7 @@
   </style>
 </head>
 <body class="min-h-screen">
+
   <nav class="bg-white border-b-2 border-blue-600 shadow-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <div class="flex items-center gap-3">
@@ -106,6 +107,7 @@
 
         let html = '';
 
+        // Default subjects (always shown)
         for (let sub of originalSubjects) {
           let total = 0, completed = 0, progress = 0;
           try {
@@ -138,6 +140,7 @@
             </div>`;
         }
 
+        // Extra subjects from MongoDB
         for (let sub of subjects) {
           const subjectId = sub._id || sub.id;
           if (originalSubjects.some(o => o.name === sub.name)) continue;
@@ -174,8 +177,8 @@
 
         container.innerHTML = html || '<p class="col-span-3 text-center py-12 text-gray-500">No subjects available yet.</p>';
       } catch (err) {
-        console.error(err);
-        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Could not load subjects. Check console (F12).</p>`;
+        console.error('Render error:', err);
+        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Error loading subjects. Check console (F12).</p>`;
       }
     }
 
@@ -184,8 +187,9 @@
     }
 
     function showAddSubjectModal() { 
-      document.getElementById('add-subject-modal').classList.remove('hidden'); 
-      document.getElementById('add-subject-modal').classList.add('flex');
+      const modal = document.getElementById('add-subject-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
     }
     function hideAddSubjectModal() { 
       const modal = document.getElementById('add-subject-modal');
