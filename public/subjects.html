@@ -13,6 +13,8 @@
   </style>
 </head>
 <body class="min-h-screen">
+
+  <!-- Header (unchanged) -->
   <nav class="bg-white border-b-2 border-blue-600 shadow-lg sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <div class="flex items-center gap-3">
@@ -48,6 +50,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="subjects-container"></div>
   </div>
 
+  <!-- Add Subject Modal (unchanged) -->
   <div id="add-subject-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-[200]">
     <div class="bg-white rounded-3xl p-8 w-full max-w-md mx-4">
       <h3 class="text-2xl font-semibold mb-6 text-center">Add New Subject</h3>
@@ -93,14 +96,16 @@
       container.innerHTML = '<p class="col-span-3 text-center py-12 text-gray-500">Loading subjects...</p>';
 
       try {
+        console.log('🔄 Fetching subjects from DB...');
         const res = await fetch(`${BACKEND_URL}/api/subjects`, { credentials: 'include' });
         let subjects = await res.json();
+        console.log('✅ Subjects from DB:', subjects);
 
-        if (!subjects || subjects.length === 0) {
+        if (!subjects || !Array.isArray(subjects) || subjects.length === 0) {
+          console.log('⚠️ No subjects in DB, using default 5 subjects');
           subjects = [];
         }
 
-        let html = '';
         const originalSubjects = [
           { id: "quant", name: "Quantitative Aptitude", color: "blue", icon: "📊" },
           { id: "reasoning", name: "Reasoning Ability", color: "purple", icon: "🧠" },
@@ -109,7 +114,9 @@
           { id: "current", name: "Current Affairs", color: "orange", icon: "📰" }
         ];
 
-        // Render original (default) subjects first
+        let html = '';
+
+        // 1. Render default 5 subjects
         for (let sub of originalSubjects) {
           let total = 0, completed = 0, progress = 0;
           try {
@@ -142,7 +149,7 @@
             </div>`;
         }
 
-        // Render any additional subjects from MongoDB
+        // 2. Render any extra subjects from MongoDB
         for (let sub of subjects) {
           const subjectId = sub._id || sub.id;
           if (originalSubjects.some(o => o.name === sub.name)) continue;
@@ -178,8 +185,9 @@
         }
 
         container.innerHTML = html || '<p class="col-span-3 text-center py-12 text-gray-500">No subjects available yet.</p>';
+        console.log('✅ All subject cards rendered successfully');
       } catch (err) {
-        console.error('Subjects render error:', err);
+        console.error('❌ Subjects render error:', err);
         container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Could not load subjects. Check console (F12).</p>`;
       }
     }
@@ -192,7 +200,6 @@
       document.getElementById('add-subject-modal').classList.remove('hidden'); 
       document.getElementById('add-subject-modal').classList.add('flex');
     }
-    
     function hideAddSubjectModal() { 
       const modal = document.getElementById('add-subject-modal');
       modal.classList.add('hidden');
@@ -236,7 +243,9 @@
       window.location.href = '/login.html';
     }
 
+    // Start everything
     window.onload = async () => {
+      console.log('🚀 subjects.html loaded - starting...');
       await checkAdmin();
       await renderSubjects();
     };
