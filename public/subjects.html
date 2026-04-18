@@ -230,7 +230,7 @@
         if (data.success) {
           alert(`✅ Subject "${name}" added!`);
           hideAddSubjectModal();
-          renderSubjects();   // Refresh immediately
+          renderSubjects();   // Refresh the list
         } else alert(data.msg || "Failed to add subject");
       } catch (err) { 
         console.error(err);
