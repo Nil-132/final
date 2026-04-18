@@ -190,7 +190,7 @@
             </div>`;
         }
 
-        container.innerHTML = html || '<p class="col-span-3 text-center py-12 text-gray-500">No subjects available yet.</p>';
+        container.innerHTML = html;
         console.log('✅ Subject cards rendered successfully');
       } catch (err) {
         console.error('❌ Subjects error:', err);
@@ -230,7 +230,7 @@
         if (data.success) {
           alert(`✅ Subject "${name}" added!`);
           hideAddSubjectModal();
-          renderSubjects();   // Refresh the list
+          renderSubjects();
         } else alert(data.msg || "Failed to add subject");
       } catch (err) { 
         console.error(err);
@@ -243,9 +243,8 @@
       try {
         const res = await fetch(`${BACKEND_URL}/api/subjects/${subjectId}`, { method: 'DELETE', credentials: 'include' });
         const data = await res.json();
-        if (data.success) {
-          renderSubjects();
-        } else alert("Failed to delete");
+        if (data.success) renderSubjects();
+        else alert("Failed to delete");
       } catch (err) { alert("Server error"); }
     }
 
