@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// ====================== CORS for Live Site ======================
+// ====================== SECURITY & CORS ======================
 app.use(cors({
   origin: [
     'http://localhost:3000',
@@ -52,7 +52,10 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ====================== EMAIL ======================
 const transporter = nodemailer.createTransport({
   service: 'gmail',
-  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+  auth: { 
+    user: process.env.EMAIL_USER, 
+    pass: process.env.EMAIL_PASS 
+  }
 });
 
 const otpStore = new Map();
@@ -79,16 +82,18 @@ const seedAdminAndSubjects = async () => {
   if (isProduction) return;
 
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || "niles25521@gmail.com";
-    const existingAdmin = await User.findOne({ email: adminEmail });
-    if (!existingAdmin) {
-      await User.create({
-        name: "Nilesh Admin",
-        email: adminEmail,
-        password: process.env.ADMIN_PASSWORD || "nilesh2003",
-        role: "admin"
-      });
-      console.log(`✅ Admin account created: ${adminEmail}`);
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (adminEmail) {
+      const existingAdmin = await User.findOne({ email: adminEmail });
+      if (!existingAdmin) {
+        await User.create({
+          name: "Nilesh Admin",
+          email: adminEmail,
+          password: process.env.ADMIN_PASSWORD,
+          role: "admin"
+        });
+        console.log(`✅ Admin account created: ${adminEmail}`);
+      }
     }
 
     const defaultSubjects = [
@@ -101,7 +106,10 @@ const seedAdminAndSubjects = async () => {
 
     for (let sub of defaultSubjects) {
       const exists = await Subject.findOne({ name: sub.name });
-      if (!exists) await Subject.create(sub);
+      if (!exists) {
+        await Subject.create(sub);
+        console.log(`✅ Added default subject: ${sub.name}`);
+      }
     }
     console.log("✅ Default subjects ready");
   } catch (e) {
@@ -111,7 +119,7 @@ const seedAdminAndSubjects = async () => {
 
 mongoose.connection.once('open', seedAdminAndSubjects);
 
-// ====================== ALL ROUTES (Complete) ======================
+// ====================== ROUTES ======================
 // Live Today
 app.get('/api/live/today', authenticate, async (req, res) => {
   try {
@@ -146,10 +154,22 @@ app.post('/api/send-otp', async (req, res) => {
     from: `"My PW" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: "Your Signup OTP - My PW",
-    html: `...` // your original HTML template
+    html: `
+    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; background: #f8fafc; border-radius: 12px;">
+    <h2 style="color: #1e40af; text-align: center;">My PW</h2>
+    <p style="text-align: center; color: #374151; font-size: 16px;">Your One-Time Password for Signup</p>
+    <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0; border: 2px solid #bfdbfe;">
+    <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">Your OTP is</p>
+    <h1 style="font-size: 42px; letter-spacing: 8px; font-weight: bold; color: #1e40af; margin: 0;">${otp}</h1>
+    </div>
+    <p style="text-align: center; color: #6b7280; font-size: 14px;">
+    This code is valid for <strong>10 minutes</strong>.<br>
+    Do not share this OTP with anyone.
+    </p>
+    </div>`
   });
 
-  res.json({ success: true, msg: "OTP sent successfully" });
+  res.json({ success: true, msg: "OTP sent successfully to your email" });
 });
 
 app.post('/api/signup', async (req, res) => {
@@ -196,9 +216,9 @@ app.post('/api/forgot-password', async (req, res) => {
       from: `"My PW" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Reset Your My PW Password",
-      html: `<h2>Reset Your Password</h2><p>Click below:</p><a href="${resetLink}">Reset Password</a>`
+      html: `<h2>Reset Your Password</h2><p>Click the button below:</p><a href="${resetLink}" style="display:inline-block; padding:12px 24px; background:#3b82f6; color:white; text-decoration:none; border-radius:8px;">Reset Password</a>`
     });
-    res.json({ success: true, msg: "Reset link sent" });
+    res.json({ success: true, msg: "Reset link sent to your email" });
   } catch (err) {
     res.status(500).json({ success: false, msg: "Failed to send reset email" });
   }
@@ -345,5 +365,5 @@ app.put('/api/lectures/:id', authenticate, isAdmin, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running in \( {process.env.NODE_ENV || 'development'} mode on http://localhost: \){PORT}`);
 });
