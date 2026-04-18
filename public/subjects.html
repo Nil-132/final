@@ -203,8 +203,8 @@
 
         container.innerHTML = html;
       } catch (err) {
-        console.error(err);
-        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Could not load subjects from server.</p>`;
+        console.error('Subjects load error:', err);
+        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Could not load subjects from server. Check console (F12).</p>`;
       }
     }
 
@@ -225,10 +225,7 @@
       const icon = document.getElementById('new-subject-icon').value.trim() || "📚";
       const colorSelect = document.getElementById('new-subject-color').value;
 
-      if (!name) {
-        alert("Please enter subject name");
-        return;
-      }
+      if (!name) return alert("Please enter subject name");
 
       try {
         const res = await fetch(`${BACKEND_URL}/api/subjects`, {
@@ -247,7 +244,7 @@
           alert(data.msg || "Failed to add subject");
         }
       } catch (err) {
-        alert("Server error while adding subject.");
+        alert("Server error while adding subject. Make sure server is running.");
       }
     }
 
@@ -260,7 +257,7 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert(`🗑️ Subject deleted!`);
+          alert(`🗑️ Subject deleted successfully!`);
           renderSubjects();
         } else {
           alert("Failed to delete subject");
@@ -286,4 +283,4 @@
     };
   </script>
 </body>
-  </html>
+</html>
