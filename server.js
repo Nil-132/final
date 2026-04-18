@@ -14,7 +14,9 @@ const PORT = process.env.PORT || 3000;
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// ====================== SECURITY & CORS ======================
+// ====================== SECURITY ======================
+app.set('trust proxy', 1);   // ← Fixed rate-limit warning on Render
+
 app.use(cors({
   origin: [
     'http://localhost:3000',
@@ -52,10 +54,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // ====================== EMAIL ======================
 const transporter = nodemailer.createTransport({
   service: 'gmail',
-  auth: { 
-    user: process.env.EMAIL_USER, 
-    pass: process.env.EMAIL_PASS 
-  }
+  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
 });
 
 const otpStore = new Map();
@@ -105,6 +104,154 @@ const seedAdminAndSubjects = async () => {
     ];
 
     for (let sub of defaultSubjects) {
+      const exists = await Subject.findOne({ name: sub.name });
+      if (!exists) await Subject.create(sub);
+    }
+    console.log("✅ Default subjects ready");
+  } catch (e) {
+    console.error("Seed error:", e.message);
+  }
+};
+
+mongoose.connection.once('open', seedAdminAndSubjects);
+
+// ====================== ROUTES ======================
+// Live Today
+app.get('/api/live/today', authenticate, async (req, res) => {
+  try {
+    const { date } = req.query;
+    const today = date || new Date().toISOString().split('T')[0];
+    const lives = await LiveSchedule.find({ date: today });
+    res.json(lives);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
+
+app.get('/api/lectures/:id', authenticate, async (req, res) => {
+  try {
+    const lecture = await Lecture.findById(req.params.id);
+    if (!lecture) return res.status(404).json({ success: false, msg: "Lecture not found" });
+    res.json(lecture);
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "Failed to fetch lecture" });
+  }
+});
+
+app.post('/api/send-otp', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.json({ success: false, msg: "Email required" });
+  if (await User.findOne({ email })) return res.json({ success: false, msg: "Email already registered" });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  otpStore.set(email, { otp, expires: Date.now() + 10 * 60 * 1000 });
+
+  await transporter.sendMail({
+    from: `"My PW" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: "Your Signup OTP - My PW",
+    html: `
+    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; background: #f8fafc; border-radius: 12px;">
+    <h2 style="color: #1e40af; text-align: center;">My PW</h2>
+    <p style="text-align: center; color: #374151; font-size: 16px;">Your One-Time Password for Signup</p>
+    <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0; border: 2px solid #bfdbfe;">
+    <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;">Your OTP is</p>
+    <h1 style="font-size: 42px; letter-spacing: 8px; font-weight: bold; color: #1e40af; margin: 0;">${otp}</h1>
+    </div>
+    <p style="text-align: center; color: #6b7280; font-size: 14px;">
+    This code is valid for <strong>10 minutes</strong>.<br>
+    Do not share this OTP with anyone.
+    </p>
+    </div>`
+  });
+
+  res.json({ success: true, msg: "OTP sent successfully to your email" });
+});
+
+app.post('/api/signup', async (req, res) => {
+  const { name, email, password, otp } = req.body;
+  const stored = otpStore.get(email);
+  if (!stored || stored.otp !== otp || stored.expires < Date.now()) {
+    return res.json({ success: false, msg: "Invalid or expired OTP" });
+  }
+  try {
+    await User.create({ name, email, password, role: "student" });
+    otpStore.delete(email);
+    res.json({ success: true, msg: "Account created! You can now login." });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "Registration failed" });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user || !(await user.comparePassword(password))) {
+      return res.json({ success: false, msg: "Invalid email or password" });
+    }
+    const token = jwt.sign({ id: user._id, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('token', token, { httpOnly: true, maxAge: 7*24*60*60*1000 });
+    res.json({ success: true, msg: "Login successful", user: { name: user.name, role: user.role } });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+});
+
+app.post('/api/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.json({ success: false, msg: "No account found with this email" });
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000;
+    await user.save();
+
+    const resetLink = `https://final-1-2h61.onrender.com/reset-password.html?token=${resetToken}`;
+
+    await transporter.sendMail({
+      from: `"My PW" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Reset Your My PW Password",
+      html: `
+        <h2>Reset Your Password</h2>
+        <p>Click the button below to reset your password:</p>
+        <a href="${resetLink}" style="display:inline-block; padding:12px 24px; background:#3b82f6; color:white; text-decoration:none; border-radius:8px; font-weight:600;">
+          Reset Password
+        </a>
+        <p style="margin-top:20px; color:#666;">This link expires in 1 hour.</p>
+      `
+    });
+
+    res.json({ success: true, msg: "Reset link sent to your email. Check your inbox." });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, msg: "Failed to send reset email" });
+  }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+    if (!user) return res.json({ success: false, msg: "Invalid or expired reset link" });
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+    res.json({ success: true, msg: "Password reset successful!" });
+  } catch (err) {
+    res.status(500).json({ success: false, msg: "Failed to reset password" });
+  }
+});
+
+app.post('/api/logout', (req,    for (let sub of defaultSubjects) {
       const exists = await Subject.findOne({ name: sub.name });
       if (!exists) {
         await Subject.create(sub);
