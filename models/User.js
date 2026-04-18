@@ -7,11 +7,8 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true, lowercase: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['admin', 'student'], default: 'student' },
-
-    // For password reset
     resetPasswordToken: String,
     resetPasswordExpires: Date,
-
     createdAt: { type: Date, default: Date.now }
 });
 

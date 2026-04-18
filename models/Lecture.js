@@ -1,3 +1,4 @@
+// models/Lecture.js - Updated (removed global completed field)
 const mongoose = require('mongoose');
 
 const lectureSchema = new mongoose.Schema({
@@ -8,12 +9,10 @@ const lectureSchema = new mongoose.Schema({
   duration: String,
   youtubeId: String,
   imageUrl: String,
-  completed: { type: Boolean, default: false },
 
-  // ✅ NEW FIELDS - Notes & More Feature (PDF and DPP)
-  // These are optional so old data will not break
-  pdfLink: String,     // Google Drive link for Class PDF
-  dppLink: String      // Google Drive link for DPP
+  // Notes & DPP Features (already present in your original)
+  pdfLink: String,     // Google Drive / direct link for Notes PDF
+  dppLink: String      // Google Drive / direct link for DPP PDF
 }, { timestamps: true });
 
 const Lecture = mongoose.model('Lecture', lectureSchema);
