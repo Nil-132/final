@@ -107,7 +107,7 @@
 
         let html = '';
 
-        // Default subjects (always shown)
+        // Default 5 subjects
         for (let sub of originalSubjects) {
           let total = 0, completed = 0, progress = 0;
           try {
@@ -118,7 +118,7 @@
               completed = lectures.filter(l => l.completed === true).length;
               progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             }
-          } catch (e) {}
+          } catch (e) { console.error("Lecture fetch error:", e); }
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
@@ -153,7 +153,7 @@
               completed = lectures.filter(l => l.completed === true).length;
               progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             }
-          } catch (e) {}
+          } catch (e) { console.error("Lecture fetch error:", e); }
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
@@ -177,7 +177,7 @@
 
         container.innerHTML = html || '<p class="col-span-3 text-center py-12 text-gray-500">No subjects available yet.</p>';
       } catch (err) {
-        console.error('Render error:', err);
+        console.error('Subjects render error:', err);
         container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Error loading subjects. Check console (F12).</p>`;
       }
     }
@@ -230,8 +230,13 @@
 
     async function logout() {
       if (!confirm("Logout?")) return;
-      await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
-      window.location.href = '/login.html';
+      try {
+        await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
+        window.location.href = '/login.html';
+      } catch (err) {
+        console.error("Logout error:", err);
+        window.location.href = '/login.html'; // still redirect even if fetch fails
+      }
     }
 
     window.onload = async () => {
