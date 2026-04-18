@@ -202,6 +202,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// Forgot Password - FIXED for live site
 app.post('/api/forgot-password', async (req, res) => {
   const { email } = req.body;
   try {
@@ -232,6 +233,7 @@ app.post('/api/forgot-password', async (req, res) => {
 
     res.json({ success: true, msg: "Reset link sent to your email. Check your inbox." });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ success: false, msg: "Failed to send reset email" });
   }
 });
