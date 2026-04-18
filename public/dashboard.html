@@ -94,6 +94,7 @@
 
     async function loadDashboard() {
       try {
+        // User info
         const userRes = await fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' });
         if (!userRes.ok) throw new Error('Auth failed');
         const userData = await userRes.json();
@@ -106,6 +107,7 @@
         document.getElementById('userRole').textContent = userData.user.role === 'admin' ? 'Admin' : 'Student';
         document.getElementById('welcomeName').textContent = (userData.user.name || 'Student').split(' ')[0];
 
+        // Lectures stats
         const lecturesRes = await fetch(`${BACKEND_URL}/api/lectures`, { credentials: 'include' });
         const lectures = await lecturesRes.json();
         const total = Array.isArray(lectures) ? lectures.length : 0;
@@ -114,6 +116,7 @@
         document.getElementById('totalLectures').textContent = total;
         document.getElementById('completedLectures').textContent = completed;
 
+        // Live today
         const today = new Date().toISOString().split('T')[0];
         const liveRes = await fetch(`\( {BACKEND_URL}/api/live/today?date= \){today}`, { credentials: 'include' });
         const liveData = await liveRes.json();
@@ -122,9 +125,8 @@
 
       } catch (err) {
         console.error('Dashboard load error:', err);
-        document.getElementById('totalLectures').textContent = '0';
-        document.getElementById('completedLectures').textContent = '0';
-        document.getElementById('liveClasses').textContent = '0';
+        // Keep previous values instead of resetting to 0 on partial failure
+        console.log('Some data failed to load, keeping previous values');
       }
     }
 
