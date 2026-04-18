@@ -14,8 +14,7 @@ const PORT = process.env.PORT || 3000;
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// ====================== SECURITY ======================
-app.set('trust proxy', 1);   // Fix for rate-limit warning on Render
+app.set('trust proxy', 1);
 
 app.use(cors({
   origin: [
@@ -36,12 +35,10 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// ====================== DATABASE ======================
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected Successfully'))
   .catch(err => console.error('❌ MongoDB Error:', err));
 
-// Models
 const User = require('./models/User');
 const Lecture = require('./models/Lecture');
 const Chapter = require('./models/Chapter');
@@ -51,7 +48,6 @@ const Subject = require('./models/Subject');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// ====================== EMAIL ======================
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
@@ -59,7 +55,6 @@ const transporter = nodemailer.createTransport({
 
 const otpStore = new Map();
 
-// ====================== MIDDLEWARE ======================
 const authenticate = (req, res, next) => {
   const token = req.cookies.token;
   if (!token) return res.status(401).json({ success: false, msg: "Please login" });
@@ -76,7 +71,7 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-// ====================== SAFE SEEDING (Development Only) ======================
+// Safe seeding (development only)
 const seedAdminAndSubjects = async () => {
   if (isProduction) return;
 
@@ -91,7 +86,7 @@ const seedAdminAndSubjects = async () => {
           password: process.env.ADMIN_PASSWORD,
           role: "admin"
         });
-        console.log(`✅ Admin account created: ${adminEmail}`);
+        console.log(`✅ Admin created: ${adminEmail}`);
       }
     }
 
@@ -105,10 +100,7 @@ const seedAdminAndSubjects = async () => {
 
     for (let sub of defaultSubjects) {
       const exists = await Subject.findOne({ name: sub.name });
-      if (!exists) {
-        await Subject.create(sub);
-        console.log(`✅ Added default subject: ${sub.name}`);
-      }
+      if (!exists) await Subject.create(sub);
     }
     console.log("✅ Default subjects ready");
   } catch (e) {
