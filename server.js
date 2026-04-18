@@ -306,7 +306,11 @@ app.post('/api/reset-password', async (req, res) => {
 
 // Logout
 app.post('/api/logout', (req, res) => {
-  res.clearCookie('token', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' });
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  });
   res.json({ success: true });
 });
 
