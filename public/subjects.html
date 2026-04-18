@@ -72,62 +72,193 @@
   </div>
 
   <script>
-  const BACKEND_URL = 'https://final-djbd.onrender.com';
-  let isAdmin = false;
+    const BACKEND_URL = 'https://final-djbd.onrender.com';
+    let isAdmin = false;
 
-  async function checkAdmin() {
-    console.log('Checking auth...');
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' });
-      console.log('Auth response status:', res.status);
-      const data = await res.json();
-      if (data.success) {
-        document.getElementById('user-name').textContent = data.user.name || 'Student';
-        if (data.user.role === 'admin') {
-          isAdmin = true;
-          document.getElementById('add-subject-btn').classList.remove('hidden');
+    async function checkAdmin() {
+      console.log('🔍 Checking authentication...');
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' });
+        console.log('Auth status:', res.status);
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('user-name').textContent = data.user.name || 'Student';
+          if (data.user.role === 'admin') {
+            isAdmin = true;
+            document.getElementById('add-subject-btn').classList.remove('hidden');
+          }
+          console.log('✅ Logged in as:', data.user.role);
+          return true;
+        } else {
+          console.log('❌ Not authenticated, redirecting...');
+          window.location.href = '/login.html';
+          return false;
         }
-        console.log('✅ Logged in as:', data.user.role);
-      } else {
-        console.log('❌ Auth failed, redirecting to login');
+      } catch (err) {
+        console.error('Auth error:', err);
         window.location.href = '/login.html';
+        return false;
       }
-    } catch (err) {
-      console.error('Auth error:', err);
+    }
+
+    async function renderSubjects() {
+      const container = document.getElementById('subjects-container');
+      container.innerHTML = '<p class="col-span-3 text-center py-12 text-gray-500">Loading subjects...</p>';
+      console.log('📡 Fetching subjects from backend...');
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/subjects`, { credentials: 'include' });
+        console.log('Subjects status:', res.status);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        let subjects = await res.json();
+        console.log('✅ Subjects received from DB:', subjects);
+
+        const originalSubjects = [
+          { id: "quant", name: "Quantitative Aptitude", color: "blue", icon: "📊" },
+          { id: "reasoning", name: "Reasoning Ability", color: "purple", icon: "🧠" },
+          { id: "english", name: "English Language", color: "pink", icon: "📖" },
+          { id: "banking", name: "Banking Awareness", color: "emerald", icon: "🏦" },
+          { id: "current", name: "Current Affairs", color: "orange", icon: "📰" }
+        ];
+
+        let html = '';
+
+        // Render default subjects
+        for (let sub of originalSubjects) {
+          let total = 0, completed = 0, progress = 0;
+          try {
+            const lecRes = await fetch(`\( {BACKEND_URL}/api/lectures?subjectId= \){sub.id}`, { credentials: 'include' });
+            if (lecRes.ok) {
+              const lectures = await lecRes.json();
+              total = lectures.length;
+              completed = lectures.filter(l => l.completed === true).length;
+              progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+            }
+          } catch (e) { console.error('Lecture fetch error for', sub.name, e); }
+
+          html += `
+            <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
+              \( {isAdmin ? `<button onclick="deleteSubject(' \){sub.id}')" class="absolute top-4 right-4 text-red-500 hover:text-red-700 text-xl"><i class="fas fa-trash"></i></button>` : ''}
+              <div onclick="openSubject('\( {sub.id}', ' \){sub.name}')" class="cursor-pointer">
+                <div class="flex justify-between items-start mb-8">
+                  <div class="text-6xl">${sub.icon}</div>
+                  <div class="text-right">
+                    <div class="text-sm text-gray-500">\( {completed}/ \){total} Lectures</div>
+                    <div class="text-5xl font-bold text-\( {sub.color}-600 mt-1"> \){progress}%</div>
+                  </div>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">${sub.name}</h3>
+                <p class="text-gray-600 mb-8">Master concepts with high-quality lectures</p>
+                <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-${sub.color}-600 rounded-full transition-all" style="width: ${progress}%"></div>
+                </div>
+              </div>
+            </div>`;
+        }
+
+        // Render extra subjects from MongoDB
+        for (let sub of subjects) {
+          const subjectId = sub._id || sub.id;
+          if (originalSubjects.some(o => o.name === sub.name)) continue;
+          let total = 0, completed = 0, progress = 0;
+          try {
+            const lecRes = await fetch(`\( {BACKEND_URL}/api/lectures?subjectId= \){subjectId}`, { credentials: 'include' });
+            if (lecRes.ok) {
+              const lectures = await lecRes.json();
+              total = lectures.length;
+              completed = lectures.filter(l => l.completed === true).length;
+              progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+            }
+          } catch (e) { console.error('Lecture fetch error for new subject', sub.name, e); }
+
+          html += `
+            <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
+              \( {isAdmin ? `<button onclick="deleteSubject(' \){subjectId}')" class="absolute top-4 right-4 text-red-500 hover:text-red-700 text-xl"><i class="fas fa-trash"></i></button>` : ''}
+              <div onclick="openSubject('\( {subjectId}', ' \){sub.name}')" class="cursor-pointer">
+                <div class="flex justify-between items-start mb-8">
+                  <div class="text-6xl">${sub.icon || '📚'}</div>
+                  <div class="text-right">
+                    <div class="text-sm text-gray-500">\( {completed}/ \){total} Lectures</div>
+                    <div class="text-5xl font-bold text-\( {sub.color || 'blue'}-600 mt-1"> \){progress}%</div>
+                  </div>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">${sub.name}</h3>
+                <p class="text-gray-600 mb-8">Master concepts with high-quality lectures</p>
+                <div class="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div class="h-full bg-${sub.color || 'blue'}-600 rounded-full transition-all" style="width: ${progress}%"></div>
+                </div>
+              </div>
+            </div>`;
+        }
+
+        container.innerHTML = html || '<p class="col-span-3 text-center py-12 text-gray-500">No subjects available yet.</p>';
+        console.log('✅ All subject cards rendered successfully');
+      } catch (err) {
+        console.error('❌ Subjects fetch error:', err);
+        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Failed to load subjects.<br>Check console (F12) for details.</p>`;
+      }
+    }
+
+    function openSubject(subjectId, subjectName) {
+      window.location.href = `/lectures.html?subjectId=\( {subjectId}&subjectName= \){encodeURIComponent(subjectName)}`;
+    }
+
+    function showAddSubjectModal() { 
+      const modal = document.getElementById('add-subject-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+    function hideAddSubjectModal() { 
+      const modal = document.getElementById('add-subject-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function addNewSubject() {
+      const name = document.getElementById('new-subject-name').value.trim();
+      const icon = document.getElementById('new-subject-icon').value.trim() || "📚";
+      const colorSelect = document.getElementById('new-subject-color').value;
+      if (!name) return alert("Please enter subject name");
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/subjects`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name, icon, color: colorSelect })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`✅ Subject "${name}" added!`);
+          hideAddSubjectModal();
+          renderSubjects();
+        } else alert(data.msg || "Failed to add subject");
+      } catch (err) { alert("Server error"); }
+    }
+
+    async function deleteSubject(subjectId) {
+      if (!confirm(`Delete subject?`)) return;
+      try {
+        const res = await fetch(`\( {BACKEND_URL}/api/subjects/ \){subjectId}`, { method: 'DELETE', credentials: 'include' });
+        const data = await res.json();
+        if (data.success) renderSubjects();
+        else alert("Failed to delete");
+      } catch (err) { alert("Server error"); }
+    }
+
+    async function logout() {
+      if (!confirm("Logout?")) return;
+      try {
+        await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
+      } catch (e) {}
       window.location.href = '/login.html';
     }
-  }
 
-  async function renderSubjects() {
-    const container = document.getElementById('subjects-container');
-    container.innerHTML = '<p class="col-span-3 text-center py-12 text-gray-500">Loading subjects...</p>';
-    console.log('Fetching subjects...');
-
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/subjects`, { credentials: 'include' });
-      console.log('Subjects response status:', res.status);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-      let subjects = await res.json();
-      console.log('Subjects received:', subjects);
-
-      // ... rest of your renderSubjects code (the for loops for cards) remains the same ...
-
-      container.innerHTML = html || '<p class="col-span-3 text-center py-12 text-gray-500">No subjects available yet.</p>';
-    } catch (err) {
-      console.error('❌ Subjects fetch error:', err);
-      container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Failed to load subjects.<br>Check console (F12).</p>`;
-    }
-  }
-
-  // keep all other functions (openSubject, addNewSubject, deleteSubject, logout, show/hide modal) exactly as they are
-
-  window.onload = async () => {
-    console.log('🚀 subjects.html loaded');
-    await checkAdmin();
-    await renderSubjects();
-  };
+    window.onload = async () => {
+      console.log('🚀 subjects.html loaded');
+      const loggedIn = await checkAdmin();
+      if (loggedIn) await renderSubjects();
+    };
   </script>
-  
 </body>
 </html>
