@@ -32,8 +32,9 @@ app.use(helmet({
 app.use(cors({
   origin: [
     'http://localhost:3000',
-    'https://final-djbd.onrender.com',
-    'https://final-1-2h61.onrender.com'
+    'https://final-djbd.onrender.com',   // ← your current domain
+    'https://final-1-2h61.onrender.com',
+    process.env.FRONTEND_URL
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
