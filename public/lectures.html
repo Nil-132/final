@@ -177,8 +177,8 @@
   <div class="bg-white rounded-3xl p-8 w-full max-w-sm mx-4">
     <h3 class="text-xl font-semibold mb-4">Admin Login</h3>
     <p class="text-gray-600 mb-6">Use your admin account</p>
-    <input type="email" id="adminEmail" placeholder="Admin Email" value="niles25521@gmail.com" class="w-full border border-gray-300 rounded-2xl px-5 py-4 mb-3">
-    <input type="password" id="adminPass" placeholder="Password" value="nilesh2003" class="w-full border border-gray-300 rounded-2xl px-5 py-4 mb-6">
+    <input type="email" id="adminEmail" placeholder="Admin Email" class="w-full border border-gray-300 rounded-2xl px-5 py-4 mb-3">
+    <input type="password" id="adminPass" placeholder="Password" class="w-full border border-gray-300 rounded-2xl px-5 py-4 mb-6">
     <div class="flex gap-3">
       <button onclick="hideLoginModal()" class="flex-1 py-4 border border-gray-300 rounded-2xl font-medium">Cancel</button>
       <button onclick="adminLogin()" class="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-semibold">Login as Admin</button>
@@ -187,6 +187,8 @@
 </div>
 
 <script>
+const BACKEND_URL = 'https://final-djbd.onrender.com';
+
 // ============== CONFIGURATION ==============
 const urlParams = new URLSearchParams(window.location.search);
 const subjectId = urlParams.get('subjectId');
@@ -203,7 +205,7 @@ let currentDppLink = '';
 // ====================== AUTH ======================
 async function checkAuth() {
   try {
-    const res = await fetch('/api/me', { credentials: 'include' });
+    const res = await fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' });
     if (!res.ok) throw new Error();
     const data = await res.json();
     if (data.success && data.user.role === 'admin') {
@@ -217,7 +219,7 @@ async function checkAuth() {
 
 async function logout() {
   if (!confirm("Are you sure you want to logout?")) return;
-  await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+  await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
   window.location.href = '/login.html';
 }
 
@@ -235,16 +237,16 @@ async function loadData() {
     return;
   }
   try {
-    const chaptersRes = await fetch(`/api/chapters?subjectId=${subjectId}`, { credentials: 'include' });
+    const chaptersRes = await fetch(`\( {BACKEND_URL}/api/chapters?subjectId= \){subjectId}`, { credentials: 'include' });
     const chapters = await chaptersRes.json();
 
     let lectures = [];
     if (currentChapterId) {
-      const lecturesRes = await fetch(`/api/lectures?chapterId=${currentChapterId}`, { credentials: 'include' });
+      const lecturesRes = await fetch(`\( {BACKEND_URL}/api/lectures?chapterId= \){currentChapterId}`, { credentials: 'include' });
       lectures = await lecturesRes.json();
     } else if (chapters.length > 0) {
       currentChapterId = chapters[0]._id;
-      const lecturesRes = await fetch(`/api/lectures?chapterId=${currentChapterId}`, { credentials: 'include' });
+      const lecturesRes = await fetch(`\( {BACKEND_URL}/api/lectures?chapterId= \){currentChapterId}`, { credentials: 'include' });
       lectures = await lecturesRes.json();
     }
 
@@ -301,7 +303,7 @@ function renderLectures(lectures) {
             <button onclick="playVideo('${lec.youtubeId || ''}')" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-2xl text-sm font-medium flex items-center justify-center gap-2">
               <i class="fa-solid fa-play"></i> Watch
             </button>
-            <button onclick="showNotesModal('${lec.pdfLink || ''}', '${lec.dppLink || ''}')" class="flex-1 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 py-2.5 rounded-2xl text-sm font-medium flex items-center justify-center gap-2">
+            <button onclick="showNotesModal('\( {lec.pdfLink || ''}', ' \){lec.dppLink || ''}')" class="flex-1 border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 py-2.5 rounded-2xl text-sm font-medium flex items-center justify-center gap-2">
               <i class="fa-solid fa-book-open"></i> Notes & More
             </button>
           </div>
@@ -356,7 +358,7 @@ function playVideo(videoId) {
 
 async function markLectureComplete(lectureId) {
   try {
-    const res = await fetch(`/api/lectures/${lectureId}/complete`, {
+    const res = await fetch(`\( {BACKEND_URL}/api/lectures/ \){lectureId}/complete`, {
       method: 'POST',
       credentials: 'include'
     });
@@ -411,12 +413,11 @@ function updateManageUI() {
   if (manageMode === 5) populateUpdateChapterSelect();
 }
 
-// Populate functions (kept as you had)
 async function populateLectureChapterSelect() {
   const select = document.getElementById('lecture-chapter-select');
   select.innerHTML = '<option value="">Select Chapter</option>';
   try {
-    const res = await fetch(`/api/chapters?subjectId=${subjectId}`, { credentials: 'include' });
+    const res = await fetch(`\( {BACKEND_URL}/api/chapters?subjectId= \){subjectId}`, { credentials: 'include' });
     const chapters = await res.json();
     chapters.forEach(ch => {
       const opt = document.createElement('option');
@@ -431,7 +432,7 @@ async function populateDeleteChapterSelect() {
   const select = document.getElementById('delete-chapter-select');
   select.innerHTML = '<option value="">Select Chapter to Delete</option>';
   try {
-    const res = await fetch(`/api/chapters?subjectId=${subjectId}`, { credentials: 'include' });
+    const res = await fetch(`\( {BACKEND_URL}/api/chapters?subjectId= \){subjectId}`, { credentials: 'include' });
     const chapters = await res.json();
     chapters.forEach(ch => {
       const opt = document.createElement('option');
@@ -446,7 +447,7 @@ async function populateDeleteLectureChapterSelect() {
   const select = document.getElementById('delete-lecture-chapter');
   select.innerHTML = '<option value="">Select Chapter</option>';
   try {
-    const res = await fetch(`/api/chapters?subjectId=${subjectId}`, { credentials: 'include' });
+    const res = await fetch(`\( {BACKEND_URL}/api/chapters?subjectId= \){subjectId}`, { credentials: 'include' });
     const chapters = await res.json();
     chapters.forEach(ch => {
       const opt = document.createElement('option');
@@ -463,7 +464,7 @@ async function updateDeleteLectureOptions() {
   select.innerHTML = '<option value="">Select Lecture to Delete</option>';
   if (!chapterId) return;
   try {
-    const res = await fetch(`/api/lectures?chapterId=${chapterId}`, { credentials: 'include' });
+    const res = await fetch(`\( {BACKEND_URL}/api/lectures?chapterId= \){chapterId}`, { credentials: 'include' });
     const lectures = await res.json();
     lectures.forEach(lec => {
       const opt = document.createElement('option');
@@ -478,7 +479,7 @@ async function populateUpdateChapterSelect() {
   const select = document.getElementById('update-lecture-chapter');
   select.innerHTML = '<option value="">Select Chapter</option>';
   try {
-    const res = await fetch(`/api/chapters?subjectId=${subjectId}`, { credentials: 'include' });
+    const res = await fetch(`\( {BACKEND_URL}/api/chapters?subjectId= \){subjectId}`, { credentials: 'include' });
     const chapters = await res.json();
     chapters.forEach(ch => {
       const opt = document.createElement('option');
@@ -495,7 +496,7 @@ async function populateUpdateLectureSelect() {
   select.innerHTML = '<option value="">Select Lecture to Update</option>';
   if (!chapterId) return;
   try {
-    const res = await fetch(`/api/lectures?chapterId=${chapterId}`, { credentials: 'include' });
+    const res = await fetch(`\( {BACKEND_URL}/api/lectures?chapterId= \){chapterId}`, { credentials: 'include' });
     const lectures = await res.json();
     lectures.forEach(lec => {
       const opt = document.createElement('option');
@@ -506,13 +507,12 @@ async function populateUpdateLectureSelect() {
   } catch (e) {}
 }
 
-// FIXED: Load existing data when selecting a lecture for update
 async function loadLectureForUpdate() {
   const lectureId = document.getElementById('update-lecture-select').value;
   if (!lectureId) return;
 
   try {
-    const res = await fetch(`/api/lectures/${lectureId}`, { credentials: 'include' });
+    const res = await fetch(`\( {BACKEND_URL}/api/lectures/ \){lectureId}`, { credentials: 'include' });
     if (!res.ok) throw new Error('Lecture not found');
 
     const lec = await res.json();
@@ -530,14 +530,14 @@ async function loadLectureForUpdate() {
   }
 }
 
-// Admin Login
+// Admin Login (secured - no hardcoded values)
 async function adminLogin() {
   const email = document.getElementById('adminEmail').value.trim();
   const password = document.getElementById('adminPass').value.trim();
   if (!email || !password) return alert("Please enter email and password");
 
   try {
-    const res = await fetch('/api/login', {
+    const res = await fetch(`${BACKEND_URL}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -573,7 +573,7 @@ async function executeManageAction() {
     if (manageMode === 1) { // Add Chapter
       const title = document.getElementById('chapter-title').value.trim();
       if (!title) return alert("Chapter title is required");
-      await fetch('/api/chapters', {
+      await fetch(`${BACKEND_URL}/api/chapters`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ subjectId, title, order: Date.now() }),
@@ -595,7 +595,7 @@ async function executeManageAction() {
         pdfLink: document.getElementById('lecture-pdf').value.trim(),
         dppLink: document.getElementById('lecture-dpp').value.trim()
       };
-      await fetch('/api/lectures', {
+      await fetch(`${BACKEND_URL}/api/lectures`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newLecture),
@@ -605,12 +605,12 @@ async function executeManageAction() {
     else if (manageMode === 3) { // Delete Chapter
       const chapterId = document.getElementById('delete-chapter-select').value;
       if (!chapterId || !confirm("Delete this chapter and all its lectures?")) return;
-      await fetch(`/api/chapters/${chapterId}`, { method: 'DELETE', credentials: 'include' });
+      await fetch(`\( {BACKEND_URL}/api/chapters/ \){chapterId}`, { method: 'DELETE', credentials: 'include' });
     }
     else if (manageMode === 4) { // Delete Lecture
       const lectureId = document.getElementById('delete-lecture-select').value;
       if (!lectureId || !confirm("Delete this lecture?")) return;
-      await fetch(`/api/lectures/${lectureId}`, { method: 'DELETE', credentials: 'include' });
+      await fetch(`\( {BACKEND_URL}/api/lectures/ \){lectureId}`, { method: 'DELETE', credentials: 'include' });
     }
     else if (manageMode === 5) { // Update Lecture
       const lectureId = document.getElementById('update-lecture-select').value;
@@ -624,7 +624,7 @@ async function executeManageAction() {
         dppLink: document.getElementById('update-dpp').value.trim()
       };
 
-      await fetch(`/api/lectures/${lectureId}`, {
+      await fetch(`\( {BACKEND_URL}/api/lectures/ \){lectureId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
