@@ -207,18 +207,30 @@ app.post('/api/forgot-password', async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) return res.json({ success: false, msg: "No account found with this email" });
+
     const resetToken = crypto.randomBytes(32).toString('hex');
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000;
     await user.save();
+
+    // Use your LIVE frontend URL
     const resetLink = `https://final-1-2h61.onrender.com/reset-password.html?token=${resetToken}`;
+
     await transporter.sendMail({
       from: `"My PW" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Reset Your My PW Password",
-      html: `<h2>Reset Your Password</h2><p>Click the button below:</p><a href="${resetLink}" style="display:inline-block; padding:12px 24px; background:#3b82f6; color:white; text-decoration:none; border-radius:8px;">Reset Password</a>`
+      html: `
+        <h2>Reset Your Password</h2>
+        <p>Click the button below to reset your password:</p>
+        <a href="${resetLink}" style="display:inline-block; padding:12px 24px; background:#3b82f6; color:white; text-decoration:none; border-radius:8px; font-weight:600;">
+          Reset Password
+        </a>
+        <p style="margin-top:20px; color:#666;">This link expires in 1 hour.</p>
+      `
     });
-    res.json({ success: true, msg: "Reset link sent to your email" });
+
+    res.json({ success: true, msg: "Reset link sent to your email. Check your inbox." });
   } catch (err) {
     res.status(500).json({ success: false, msg: "Failed to send reset email" });
   }
