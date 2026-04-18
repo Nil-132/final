@@ -106,13 +106,11 @@
 
       try {
         const res = await fetch(`${BACKEND_URL}/api/subjects`, { credentials: 'include' });
-        console.log('Subjects status:', res.status);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         let subjects = await res.json();
         console.log('✅ Subjects from DB:', subjects);
 
-        // Safety: ensure it's always an array
         if (!Array.isArray(subjects)) subjects = [];
 
         const originalSubjects = [
@@ -125,7 +123,7 @@
 
         let html = '';
 
-        // Render default 5 subjects
+        // Default subjects
         for (let sub of originalSubjects) {
           let total = 0, completed = 0, progress = 0;
           try {
@@ -158,7 +156,7 @@
             </div>`;
         }
 
-        // Render ALL subjects from DB (no skipping)
+        // Extra subjects from DB
         for (let sub of subjects) {
           const subjectId = sub._id || sub.id;
           let total = 0, completed = 0, progress = 0;
@@ -232,7 +230,6 @@
         if (data.success) {
           alert(`✅ Subject "${name}" added!`);
           hideAddSubjectModal();
-          // Refresh the list immediately
           renderSubjects();
         } else alert(data.msg || "Failed to add subject");
       } catch (err) { 
@@ -247,7 +244,7 @@
         const res = await fetch(`\( {BACKEND_URL}/api/subjects/ \){subjectId}`, { method: 'DELETE', credentials: 'include' });
         const data = await res.json();
         if (data.success) {
-          renderSubjects();   // Refresh list after delete
+          renderSubjects();
         } else alert("Failed to delete");
       } catch (err) { alert("Server error"); }
     }
