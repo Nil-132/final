@@ -114,7 +114,6 @@
         const res = await fetch(`${BACKEND_URL}/api/subjects`, { credentials: 'include' });
         let subjects = await res.json();
 
-        // If backend returns empty, use your original 5 as base
         if (!subjects || subjects.length === 0) {
           subjects = [
             { id: "quant", name: "Quantitative Aptitude", color: "blue", icon: "📊" },
@@ -127,7 +126,6 @@
 
         let html = '';
 
-        // First show the original 5 subjects
         const originalSubjects = [
           { id: "quant", name: "Quantitative Aptitude", color: "blue", icon: "📊" },
           { id: "reasoning", name: "Reasoning Ability", color: "purple", icon: "🧠" },
@@ -168,10 +166,8 @@
             </div>`;
         }
 
-        // Then show newly added subjects at the end
         for (let sub of subjects) {
           const subjectId = sub._id || sub.id;
-          // Skip if it's one of the original 5 (to avoid duplicates)
           if (originalSubjects.some(o => o.name === sub.name)) continue;
 
           let total = 0, progress = 0;
@@ -239,11 +235,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({
-            name: name,
-            icon: icon,
-            color: colorSelect
-          })
+          body: JSON.stringify({ name, icon, color: colorSelect })
         });
 
         const data = await res.json();
@@ -255,22 +247,20 @@
           alert(data.msg || "Failed to add subject");
         }
       } catch (err) {
-        alert("Server error while adding subject. Make sure server is running.");
+        alert("Server error while adding subject.");
       }
     }
 
     async function deleteSubject(subjectId) {
       if (!confirm(`Delete subject "${subjectId}" and all its lectures?`)) return;
-
       try {
         const res = await fetch(`\( {BACKEND_URL}/api/subjects/ \){subjectId}`, {
           method: 'DELETE',
           credentials: 'include'
         });
-
         const data = await res.json();
         if (data.success) {
-          alert(`🗑️ Subject "${subjectId}" deleted successfully!`);
+          alert(`🗑️ Subject deleted!`);
           renderSubjects();
         } else {
           alert("Failed to delete subject");
@@ -296,4 +286,4 @@
     };
   </script>
 </body>
-</html>
+  </html>
