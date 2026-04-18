@@ -16,7 +16,11 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // ====================== SECURITY & MIDDLEWARE ======================
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: [
+    'http://localhost:3000',
+    'https://final-1-2h61.onrender.com',
+    process.env.FRONTEND_URL
+  ],
   credentials: true
 }));
 
