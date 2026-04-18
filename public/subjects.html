@@ -156,7 +156,7 @@
             </div>`;
         }
 
-        // All subjects from DB (newly added ones will show here)
+        // All subjects from MongoDB (including newly added)
         for (let sub of subjects) {
           const subjectId = sub._id || sub.id;
           let total = 0, completed = 0, progress = 0;
@@ -244,7 +244,7 @@
         const res = await fetch(`${BACKEND_URL}/api/subjects/${subjectId}`, { method: 'DELETE', credentials: 'include' });
         const data = await res.json();
         if (data.success) {
-          renderSubjects();   // Refresh immediately
+          renderSubjects();
         } else alert("Failed to delete");
       } catch (err) { alert("Server error"); }
     }
