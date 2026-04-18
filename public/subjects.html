@@ -90,7 +90,7 @@
           console.log('✅ Logged in as:', data.user.role);
           return true;
         } else {
-          console.log('❌ Not authenticated, redirecting...');
+          console.log('❌ Not authenticated');
           window.location.href = '/login.html';
           return false;
         }
@@ -104,7 +104,7 @@
     async function renderSubjects() {
       const container = document.getElementById('subjects-container');
       container.innerHTML = '<p class="col-span-3 text-center py-12 text-gray-500">Loading subjects...</p>';
-      console.log('📡 Fetching subjects from backend...');
+      console.log('📡 Fetching subjects...');
 
       try {
         const res = await fetch(`${BACKEND_URL}/api/subjects`, { credentials: 'include' });
@@ -112,7 +112,7 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         let subjects = await res.json();
-        console.log('✅ Subjects received from DB:', subjects);
+        console.log('✅ Subjects from DB:', subjects);
 
         const originalSubjects = [
           { id: "quant", name: "Quantitative Aptitude", color: "blue", icon: "📊" },
@@ -124,7 +124,7 @@
 
         let html = '';
 
-        // Render default subjects
+        // Default subjects
         for (let sub of originalSubjects) {
           let total = 0, completed = 0, progress = 0;
           try {
@@ -135,7 +135,7 @@
               completed = lectures.filter(l => l.completed === true).length;
               progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             }
-          } catch (e) { console.error('Lecture fetch error for', sub.name, e); }
+          } catch (e) { console.error('Lecture error for', sub.name); }
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
@@ -157,7 +157,7 @@
             </div>`;
         }
 
-        // Render extra subjects from MongoDB
+        // Extra subjects from DB
         for (let sub of subjects) {
           const subjectId = sub._id || sub.id;
           if (originalSubjects.some(o => o.name === sub.name)) continue;
@@ -170,7 +170,7 @@
               completed = lectures.filter(l => l.completed === true).length;
               progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             }
-          } catch (e) { console.error('Lecture fetch error for new subject', sub.name, e); }
+          } catch (e) { console.error('Lecture error for new subject', sub.name); }
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
@@ -193,10 +193,10 @@
         }
 
         container.innerHTML = html || '<p class="col-span-3 text-center py-12 text-gray-500">No subjects available yet.</p>';
-        console.log('✅ All subject cards rendered successfully');
+        console.log('✅ Subject cards rendered');
       } catch (err) {
-        console.error('❌ Subjects fetch error:', err);
-        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Failed to load subjects.<br>Check console (F12) for details.</p>`;
+        console.error('❌ Subjects error:', err);
+        container.innerHTML = `<p class="col-span-3 text-center py-12 text-red-500">Failed to load subjects.<br>Check console (F12).</p>`;
       }
     }
 
