@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - My PW</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <style>
     body { font-family: system-ui, sans-serif; }
     .card-hover { transition: all 0.3s; }
@@ -13,6 +13,7 @@
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
+
   <nav class="bg-white shadow-md px-8 py-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <h1 class="text-3xl font-bold text-blue-600">My PW</h1>
@@ -93,12 +94,15 @@
     const BACKEND_URL = 'https://final-djbd.onrender.com';
 
     async function loadDashboard() {
+      console.log('🚀 Loading dashboard...');
       try {
         // User info
         const userRes = await fetch(`${BACKEND_URL}/api/me`, { credentials: 'include' });
-        if (!userRes.ok) throw new Error('Auth failed');
+        console.log('User info status:', userRes.status);
         const userData = await userRes.json();
+
         if (!userData.success) {
+          console.log('❌ Not authenticated');
           window.location.href = 'login.html';
           return;
         }
@@ -107,8 +111,11 @@
         document.getElementById('userRole').textContent = userData.user.role === 'admin' ? 'Admin' : 'Student';
         document.getElementById('welcomeName').textContent = (userData.user.name || 'Student').split(' ')[0];
 
+        console.log('✅ User loaded:', userData.user.name);
+
         // Lectures stats
         const lecturesRes = await fetch(`${BACKEND_URL}/api/lectures`, { credentials: 'include' });
+        console.log('Lectures status:', lecturesRes.status);
         const lectures = await lecturesRes.json();
         const total = Array.isArray(lectures) ? lectures.length : 0;
         const completed = Array.isArray(lectures) ? lectures.filter(l => l.completed === true).length : 0;
@@ -118,15 +125,15 @@
 
         // Live today
         const today = new Date().toISOString().split('T')[0];
-        const liveRes = await fetch(`\( {BACKEND_URL}/api/live/today?date= \){today}`, { credentials: 'include' });
+        const liveRes = await fetch(`${BACKEND_URL}/api/live/today?date=${today}`, { credentials: 'include' });
+        console.log('Live status:', liveRes.status);
         const liveData = await liveRes.json();
         const liveToday = Array.isArray(liveData) ? liveData.length : 0;
         document.getElementById('liveClasses').textContent = liveToday;
 
+        console.log('✅ Dashboard data loaded successfully');
       } catch (err) {
-        console.error('Dashboard load error:', err);
-        // Keep previous values instead of resetting to 0 on partial failure
-        console.log('Some data failed to load, keeping previous values');
+        console.error('❌ Dashboard load error:', err);
       }
     }
 
