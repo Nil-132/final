@@ -237,14 +237,18 @@ app.post('/api/login', async (req, res) => {
       return res.json({ success: false, msg: "Invalid email or password" });
     }
     // Inside app.post('/api/login' ...
+// Inside app.post('/api/login', ...
 const token = jwt.sign({ id: user._id, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
 
+// ←←← REPLACE THE res.cookie line with this:
 res.cookie('token', token, {
   httpOnly: true,
-  secure: true,                    // ← Required for HTTPS on Render
-  sameSite: 'none',                // ← Required for cross-origin
+  secure: true,           // Important for HTTPS on Render
+  sameSite: 'none',       // Required for cross-origin on Render
   maxAge: 7 * 24 * 60 * 60 * 1000
 });
+
+res.json({ success: true, msg: "Login successful", user: { name: user.name, role: user.role } });
     
     res.json({ success: true, msg: "Login successful", user: { name: user.name, role: user.role } });
   } catch (err) {
