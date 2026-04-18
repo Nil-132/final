@@ -107,7 +107,7 @@
 
         let html = '';
 
-        // Default 5 subjects
+        // Default subjects
         for (let sub of originalSubjects) {
           let total = 0, completed = 0, progress = 0;
           try {
@@ -118,7 +118,7 @@
               completed = lectures.filter(l => l.completed === true).length;
               progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             }
-          } catch (e) { console.error("Lecture fetch error:", e); }
+          } catch (e) {}
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
@@ -140,7 +140,7 @@
             </div>`;
         }
 
-        // Extra subjects from MongoDB
+        // Extra subjects from DB
         for (let sub of subjects) {
           const subjectId = sub._id || sub.id;
           if (originalSubjects.some(o => o.name === sub.name)) continue;
@@ -153,7 +153,7 @@
               completed = lectures.filter(l => l.completed === true).length;
               progress = total > 0 ? Math.round((completed / total) * 100) : 0;
             }
-          } catch (e) { console.error("Lecture fetch error:", e); }
+          } catch (e) {}
 
           html += `
             <div class="subject-card bg-white rounded-3xl p-8 border border-gray-100 relative">
@@ -232,11 +232,8 @@
       if (!confirm("Logout?")) return;
       try {
         await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
-        window.location.href = '/login.html';
-      } catch (err) {
-        console.error("Logout error:", err);
-        window.location.href = '/login.html'; // still redirect even if fetch fails
-      }
+      } catch (e) {}
+      window.location.href = '/login.html';
     }
 
     window.onload = async () => {
